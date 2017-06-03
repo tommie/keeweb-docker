@@ -28,4 +28,13 @@ RUN wget https://github.com/keeweb/keeweb-plugins/archive/master.zip && \
     mv keeweb-plugins-master/docs /usr/share/nginx/html/plugins && \
     rm -fr /usr/share/nginx/html/plugins/CNAME keeweb-plugins-master master.zip
 
-EXPOSE 80
+# Inject GDrive and OneDrive OAuth client IDs.
+ARG gdriveclientid
+ARG onedriveclientid
+
+ADD config.json /usr/share/nginx/html/
+RUN sed -i \
+	-e 's;\("gdriveClientId":\s*\)null\(,\?\)$;\1"'"${gdriveclientid:-}"'"\2;' \
+	-e 's;\("onedriveClientId":\s*\)null\(,\?\)$;\1"'"${onedriveclientid:-}"'"\2;' \
+	/usr/share/nginx/html/config.json
+RUN sed -i -e "s;(no-config);config.json;" /usr/share/nginx/html/index.html
