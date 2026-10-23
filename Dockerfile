@@ -10,23 +10,27 @@
 # docker build -t keeweb .
 # docker run --name keeweb -d -p 127.0.0.1:5680:80 keeweb
 
-FROM nginx:stable
+ARG nginx_ver=stable
+FROM nginx:${nginx_ver}
 MAINTAINER Tommie
 
 # install
 RUN apt-get -y update && apt-get -y install wget unzip && rm -fr /var/lib/apt/lists/*
 
 # clone keeweb
-RUN wget https://github.com/keeweb/keeweb/archive/gh-pages.zip && \
-    unzip gh-pages.zip && \
-    mv keeweb-gh-pages/* /usr/share/nginx/html && \
-    rm -fr /usr/share/nginx/html/CNAME keeweb-gh-pages gh-pages.zip
+# The refs can be branches or commit hashes, to pin what gets downloaded.
+ARG keeweb_ref=gh-pages
+RUN wget -O keeweb.zip "https://github.com/keeweb/keeweb/archive/${keeweb_ref}.zip" && \
+    unzip keeweb.zip && \
+    mv keeweb-*/* /usr/share/nginx/html && \
+    rm -fr /usr/share/nginx/html/CNAME keeweb-* keeweb.zip
 
 # clone keeweb plugins
-RUN wget https://github.com/keeweb/keeweb-plugins/archive/master.zip && \
-    unzip master.zip && \
-    mv keeweb-plugins-master/docs /usr/share/nginx/html/plugins && \
-    rm -fr /usr/share/nginx/html/plugins/CNAME keeweb-plugins-master master.zip
+ARG keeweb_plugins_ref=master
+RUN wget -O keeweb-plugins.zip "https://github.com/keeweb/keeweb-plugins/archive/${keeweb_plugins_ref}.zip" && \
+    unzip keeweb-plugins.zip && \
+    mv keeweb-plugins-*/docs /usr/share/nginx/html/plugins && \
+    rm -fr /usr/share/nginx/html/plugins/CNAME keeweb-plugins-* keeweb-plugins.zip
 
 # Inject GDrive and OneDrive OAuth client IDs.
 ARG gdriveclientid
